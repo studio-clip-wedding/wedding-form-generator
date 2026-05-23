@@ -124,15 +124,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .block-add{width:100%;padding:10px;background:var(--c);border:none;border-top:.5px solid var(--b);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--a);cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:5px}
 .block-add:hover{background:var(--al)}
 .block-add:disabled{opacity:.35;cursor:default;pointer-events:none}
-.sec-footer{display:flex;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:1.5rem;border-top:.5px solid var(--b)}
+.sec-footer{display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:2.5rem;padding-top:1.5rem;border-top:.5px solid var(--b)}
 .btn-nav{font-family:'Noto Sans JP',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:none;border:.5px solid var(--bs);border-radius:var(--r);padding:8px 20px;cursor:pointer;color:var(--m);transition:all .2s}
 .btn-nav:hover{border-color:var(--a);color:var(--a)}
 .btn-nav:disabled{opacity:.3;cursor:default;pointer-events:none}
 .btn-nav-next{background:var(--k);color:var(--w);border-color:var(--k)}
 .btn-nav-next:hover{opacity:.8;color:var(--w)}
-.submit-area{margin-top:2.5rem;padding-top:1.5rem;border-top:.5px solid var(--b);display:flex;justify-content:flex-end}
-.btn-submit{font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;background:var(--k);color:var(--w);border:none;border-radius:var(--r);padding:11px 32px;cursor:pointer;transition:opacity .2s}
-.btn-submit:hover{opacity:.8}
+.submit-area{margin-top:2.5rem;padding-top:1.5rem;border-top:.5px solid var(--b);display:flex;justify-content:center}
+.btn-submit-float{font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;background:var(--a);color:var(--w);border:none;border-radius:var(--r);padding:10px 24px;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.btn-submit-float:hover{opacity:.85}
+.hdr-submit-wrap{display:flex;align-items:center}
 #confirm-screen{display:none;min-height:100vh;flex-direction:column}
 .confirm-screen{display:flex;flex-direction:column}
 #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:2000;display:none;align-items:center;justify-content:center;cursor:zoom-out;padding:1.5rem}
@@ -208,11 +209,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="form-header-title" id="form-title">Wedding Film — 入稿フォーム</div>
     <div class="hdr-right">
       <span class="autosave-badge" id="save-badge">● 保存済み</span>
-      <button class="btn btn-accent" onclick="exportForm()">HTMLを書き出す ↓</button>
+      <button class="btn-submit-float"<button class="btn btn-accent" onclick="exportForm()">HTMLを書き出す ↓</button>
       <button class="btn btn-ghost" onclick="resetAll()">← やり直す</button>
     </div>
   </div>
-  <div class="tab-bar"><div class="tab-nav" id="tab-nav"></div></div>
+  <div class="tab-bar">
+  <div style="display:flex;align-items:center;justify-content:center;gap:1rem;padding:0 1rem">
+    <div class="tab-nav" id="tab-nav"></div>
+    <button class="tab-btn tab-btn-submit" id="tab-submit-btn" onclick="validateAndConfirm()" style="display:none;flex-shrink:0">確認画面</button>
+  </div>
+</div>
   <div class="form-body" id="form-body"></div>
 </div>
 
@@ -324,10 +330,15 @@ function buildForm(rows, productName) {
   const nav  = document.getElementById('tab-nav');
   body.innerHTML = ''; nav.innerHTML = '';
   _secs = []; _curSec = 0; _blkCnt = 0;
-  // フォームタイトルを設定
+  // フォームタイトルを設定（productNameがない場合は既存の内容を保持）
   const titleEl = document.getElementById('form-title');
-  if (titleEl) titleEl.textContent = productName ? productName + ' 入稿フォーム' : 'Wedding Film — 入稿フォーム';
-  document.title = productName ? productName + ' 入稿フォーム' : 'Wedding Film — 入稿フォーム';
+  if (titleEl && productName) {
+    titleEl.textContent = productName + ' 入稿フォーム';
+    document.title = productName + ' 入稿フォーム';
+  } else if (titleEl && !productName && titleEl.textContent && titleEl.textContent !== 'Wedding Film — 入稿フォーム') {
+    // 既存タイトルをそのまま使用
+    document.title = titleEl.textContent;
+  }
 
   let sections = [];
   let cur = null;
@@ -446,6 +457,8 @@ function buildForm(rows, productName) {
   restoreSave();
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('form-screen').style.display = 'block';
+  const tabSubmit = document.getElementById('tab-submit-btn');
+  if (tabSubmit) tabSubmit.style.display = '';
 }
 
 // ---------- Tabs ----------
@@ -468,15 +481,20 @@ function showSec(i) {
   if (!el) return;
   const isLast = i === _secs.length - 1;
   const footer = document.createElement('div');
-  if (isLast) {
-    footer.className = 'submit-area';
-    const btn = document.createElement('button'); btn.className = 'btn-submit'; btn.textContent = '送信する →';
-    btn.onclick = validateAndConfirm; footer.appendChild(btn);
-  } else {
-    footer.className = 'sec-footer';
+  footer.className = isLast ? 'submit-area' : 'sec-footer';
+  if (!isLast) {
     const prev = document.createElement('button'); prev.className = 'btn-nav'; prev.textContent = '← 前へ'; prev.disabled = i === 0; prev.onclick = () => showSec(i-1);
+    footer.appendChild(prev);
+  }
+  // 中央に入稿ボタン
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'btn-submit-float';
+  submitBtn.textContent = '確認画面';
+  submitBtn.onclick = validateAndConfirm;
+  footer.appendChild(submitBtn);
+  if (!isLast) {
     const next = document.createElement('button'); next.className = 'btn-nav btn-nav-next'; next.textContent = '次へ →'; next.onclick = () => showSec(i+1);
-    footer.appendChild(prev); footer.appendChild(next);
+    footer.appendChild(next);
   }
   el.appendChild(footer);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1193,39 +1211,52 @@ function submitForm(){
 function exportForm(){
   if(!_rows.length){alert('フォームが生成されていません。');return;}
   const css = document.querySelector('style').textContent;
-  // 最後のインラインscriptがメインJS
   const allScripts = document.querySelectorAll('script:not([src])');
   const js = allScripts[allScripts.length-1].textContent;
   const rowsJSON = JSON.stringify(_rows);
+  const titleText = document.getElementById('form-title') ? document.getElementById('form-title').textContent : 'Wedding Film \u2014 \u5165\u7a3f\u30d5\u30a9\u30fc\u30e0';
+
+  // form-screen の outerHTML を取得してヘッダーボタンを非表示に
+  let formHTML = document.getElementById('form-screen').outerHTML;
+  formHTML = formHTML.replace(/\bstyle="display:\s*none[^"]*"/gi, '');
+  formHTML = formHTML.replace(/class="hdr-right"/g, 'class="hdr-right" style="display:none"');
+
   const parts = [
     '<!DOCTYPE html>',
     '<html lang="ja">',
     '<head>',
     '<meta charset="UTF-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    '<title>Wedding Film — 入稿フォーム</title>',
+    '<title>' + titleText + '</title>',
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">',
-
-    '<style>' + css + '<\/style>',
-    '<\/head>',
+    '<scr'+'ipt src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"><\/sc'+'ript>',
+    '<style>' + css + '</style>',
+    '</head>',
     '<body>',
-    '<div id="upload-screen" style="display:none"><\/div>',
-    document.getElementById('form-screen').outerHTML.replace(/\bstyle="display:\s*none[^"]*"/gi,''),
+    '<div id="upload-screen" style="display:none"></div>',
+    formHTML,
     document.getElementById('success-screen').outerHTML,
     document.getElementById('confirm-screen').outerHTML,
     document.getElementById('crop-overlay').outerHTML,
     document.getElementById('lightbox').outerHTML,
   ];
+
   const safeJS = js
     .replace(/function exportForm[\s\S]*?\n\}/, 'function exportForm(){}')
     .replace(/function resetAll[\s\S]*?\n\}/, 'function resetAll(){}')
-    .replace(/function loadFile[\s\S]*?\n\}/, 'function loadFile(){}');
-  parts.push('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"><\/sc'+'ript>');
+    .replace(/function loadFile[\s\S]*?\n\}/, 'function loadFile(){}')
+    .replace(/\/\/ ---------- xlsx ----------[\s\S]*?\n\n/, '// xlsx removed\n\n')
+    .replace(/const dropZone[^;]+;\n/, '')
+    .replace(/const xlsxInput[^;]+;\n/, '')
+    .replace(/dropZone\.addEventListener[^;]+;\n/g, '')
+    .replace(/xlsxInput\.addEventListener[^;]+;\n/g, '');
+
   parts.push('<scr'+'ipt>');
   parts.push(safeJS);
-  parts.push('(function(){var _r='+rowsJSON+';if(document.readyState!=="loading"){buildForm(_r);}else{document.addEventListener("DOMContentLoaded",function(){buildForm(_r);});}})();');
-  parts.push('<\/scr'+'ipt>');
-  parts.push('<\/body>','<\/html>');
+  const titleForExport = document.getElementById('form-title') ? document.getElementById('form-title').textContent : '';
+  parts.push('(function(){var _r='+rowsJSON+';var _t='+JSON.stringify(titleForExport)+';function _boot(){var el=document.getElementById(\'form-title\');if(el&&_t)el.textContent=_t;document.title=_t||document.title;buildForm(_r);}if(document.readyState!=="loading"){_boot();}else{document.addEventListener("DOMContentLoaded",_boot);}})();');
+  parts.push('<\/sc'+'ript>');
+  parts.push('</body>','</html>');
   const output = parts.join('\n');
   const blob = new Blob([output],{type:'text/html;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'index.html'; a.click();
