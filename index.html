@@ -236,8 +236,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <button class="btn-back" onclick="backToForm()">← 修正する</button>
     <button class="btn-send" onclick="submitForm()">この内容で送信する →</button>
   </div>
-</div>
 
+</div>
 <!-- Success -->
 <div id="success-screen">
   <div class="success-icon">✓</div>
@@ -291,7 +291,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 // ==============================================
 
 const SAVE_KEY = 'wf_v7';
-let _rows = [], _secs = [], _curSec = 0, _blkCnt = 0, _saveTimer = null;
+let _rows = [], _secs = [], _curSec = 0, _blkCnt = 0, _saveTimer = null, _adminPass = 'studio2024';
 
 // ---------- xlsx ----------
 const dropZone = document.getElementById('drop-zone');
@@ -309,10 +309,11 @@ function loadFile(file) {
       const ws = wb.Sheets['フォーム定義'];
       if (!ws) { alert('「フォーム定義」シートが見つかりません。'); return; }
       const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-      // 商品名を取得（「フォームタイトル」ラベルの行のB列）
-      let productName = '';
+      // 商品名・パスワードを取得
+      let productName = '', adminPass = '';
       for (let i = 0; i < data.length; i++) {
-        if (String(data[i][0]).includes('フォームタイトル')) { productName = String(data[i][1]||'').trim(); break; }
+        if (String(data[i][0]).includes('フォームタイトル')) productName = String(data[i][1]||'').trim();
+        if (String(data[i][0]).includes('管理者パスワード')) adminPass = String(data[i][1]||'').trim();
       }
       let start = -1;
       for (let i = 0; i < data.length; i++) {
@@ -320,18 +321,19 @@ function loadFile(file) {
       }
       if (start < 0) start = 5;
       _rows = data.slice(start).filter(r => String(r[0]||'').trim() || String(r[3]||'').trim());
-      buildForm(_rows, productName);
+      buildForm(_rows, productName, adminPass);
     } catch(err) { alert('読み込みエラー: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 }
 
 // ---------- Build Form ----------
-function buildForm(rows, productName) {
+function buildForm(rows, productName, adminPass) {
   const body = document.getElementById('form-body');
   const nav  = document.getElementById('tab-nav');
   body.innerHTML = ''; nav.innerHTML = '';
   _secs = []; _curSec = 0; _blkCnt = 0;
+  if (adminPass) _adminPass = adminPass;
   // フォームタイトルを設定（productNameがない場合は既存の内容を保持）
   const titleEl = document.getElementById('form-title');
   if (titleEl && productName) {
@@ -480,6 +482,8 @@ function showSec(i) {
   document.querySelectorAll('.tab-btn').forEach((b, j) => b.classList.toggle('active', j === i));
   // footer
   const old = el && el.querySelector('.sec-footer,.submit-area'); if (old) old.remove();
+  // 既存の管理者用ボタンも削除
+  el && el.querySelectorAll('.force-wrap').forEach(e => e.remove());
   if (!el) return;
   const isLast = i === _secs.length - 1;
   const footer = document.createElement('div');
@@ -498,7 +502,18 @@ function showSec(i) {
     const next = document.createElement('button'); next.className = 'btn-nav btn-nav-next'; next.textContent = '次へ →'; next.onclick = () => showSec(i+1);
     footer.appendChild(next);
   }
+
   el.appendChild(footer);
+  // 管理者用ボタンをフッターの直後に追加
+  const forceWrap = document.createElement('div');
+  forceWrap.className = 'force-wrap'; forceWrap.style.cssText = 'text-align:center;padding:.6rem 0';
+  const forceBtn2 = document.createElement('button');
+  forceBtn2.onclick = forceSubmit;
+  forceBtn2.type = 'button';
+  forceBtn2.textContent = '管理者用';
+  forceBtn2.style.cssText = "background:none;border:none;font-size:12px;color:var(--k);cursor:pointer;font-family:'Noto Sans JP',sans-serif;text-decoration:underline";
+  forceWrap.appendChild(forceBtn2);
+  el.appendChild(forceWrap);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1259,7 +1274,8 @@ function exportForm(){
   parts.push('<scr'+'ipt>');
   parts.push(safeJS);
   const titleForExport = document.getElementById('form-title') ? document.getElementById('form-title').textContent : '';
-  parts.push('(function(){var _r='+rowsJSON+';var _t='+JSON.stringify(titleForExport)+';function _boot(){var el=document.getElementById(\'form-title\');if(el&&_t)el.textContent=_t;document.title=_t||document.title;buildForm(_r);}if(document.readyState!=="loading"){_boot();}else{document.addEventListener("DOMContentLoaded",_boot);}})();');
+  const passForExport = _adminPass || '';
+  parts.push('(function(){var _r='+rowsJSON+';var _t='+JSON.stringify(titleForExport)+';var _p='+JSON.stringify(passForExport)+';function _boot(){var el=document.getElementById(\'form-title\');if(el&&_t)el.textContent=_t;document.title=_t||document.title;buildForm(_r,\'\',_p);}if(document.readyState!=="loading"){_boot();}else{document.addEventListener("DOMContentLoaded",_boot);}})();');
   parts.push('<\/sc'+'ript>');
   parts.push('</body>','</html>');
   const output = parts.join('\n');
@@ -1270,6 +1286,17 @@ function exportForm(){
 
 
 // ---------- Util ----------
+function forceSubmit(){
+  const pw = prompt('管理者パスワードを入力してください');
+  if(pw === null) return;
+  if(pw !== _adminPass) { alert('パスワードが違います'); return; }
+  // バリデーションスキップで確認画面へ
+  document.querySelectorAll('.field.has-error').forEach(f => f.classList.remove('has-error'));
+  document.querySelectorAll('.field-error-msg').forEach(m => m.remove());
+  document.querySelectorAll('.validate-banner').forEach(b => b.classList.remove('show'));
+  showConfirm();
+}
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function openLightbox(src){
