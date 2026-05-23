@@ -1190,7 +1190,9 @@ function submitForm(){
 function exportForm(){
   if(!_rows.length){alert('フォームが生成されていません。');return;}
   const css = document.querySelector('style').textContent;
-  const js  = document.querySelector('script:not([src])').textContent;
+  // 最後のインラインscriptがメインJS
+  const allScripts = document.querySelectorAll('script:not([src])');
+  const js = allScripts[allScripts.length-1].textContent;
   const rowsJSON = JSON.stringify(_rows);
   const parts = [
     '<!DOCTYPE html>',
@@ -1198,18 +1200,19 @@ function exportForm(){
     '<head>',
     '<meta charset="UTF-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    '<title>Wedding Film \u2014 \u5165\u7a3f\u30d5\u30a9\u30fc\u30e0</title>',
-    '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">',
-    '<style>' + css + '</style>',
-    '</head>',
+    '<title>Wedding Film — 入稿フォーム</title>',
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">',
+    '<scr'+'ipt src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"><\/sc'+'ript>',
+    '<style>' + css + '<\/style>',
+    '<\/head>',
     '<body>',
-    '<div id="upload-screen" style="display:none"></div>',
-    document.getElementById('form-screen').outerHTML
-      .replace(/\bstyle="display:\s*none[^"]*"/gi,''),
+    '<div id="upload-screen" style="display:none"><\/div>',
+    document.getElementById('form-screen').outerHTML.replace(/\bstyle="display:\s*none[^"]*"/gi,''),
     document.getElementById('success-screen').outerHTML,
+    document.getElementById('confirm-screen').outerHTML,
     document.getElementById('crop-overlay').outerHTML,
+    document.getElementById('lightbox').outerHTML,
   ];
-  // JS: replace exportForm/resetAll/loadFile with stubs, auto-boot
   const safeJS = js
     .replace(/function exportForm[\s\S]*?\n\}/, 'function exportForm(){}')
     .replace(/function resetAll[\s\S]*?\n\}/, 'function resetAll(){}')
@@ -1218,12 +1221,13 @@ function exportForm(){
   parts.push(safeJS);
   parts.push('(function(){var _r='+rowsJSON+';if(document.readyState!=="loading"){buildForm(_r);}else{document.addEventListener("DOMContentLoaded",function(){buildForm(_r);});}})();');
   parts.push('<\/scr'+'ipt>');
-  parts.push('</body>','</html>');
-  const html = parts.join('\n');
-  const blob = new Blob([html],{type:'text/html;charset=utf-8'});
+  parts.push('<\/body>','<\/html>');
+  const output = parts.join('\n');
+  const blob = new Blob([output],{type:'text/html;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wedding_form.html'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
 }
+
 
 // ---------- Util ----------
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
