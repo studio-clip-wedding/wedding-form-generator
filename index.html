@@ -32,6 +32,15 @@ html,body{font-family:'Noto Sans JP',sans-serif;font-weight:300;background:var(-
 #form-screen{display:none}
 .sticky-wrap{position:sticky;top:0;z-index:200;background:var(--w)}
 .form-header{background:var(--w);border-bottom:.5px solid var(--b);padding:.85rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hamburger-btn{background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:var(--a);line-height:1;flex-shrink:0}
+.tab-dropdown{display:none;position:absolute;top:100%;left:0;background:var(--w);border:.5px solid var(--b);border-radius:0 0 var(--r) var(--r);box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:300;min-width:200px;padding:.4rem 0}
+.tab-dropdown.open{display:block}
+.tab-dropdown-list{display:flex;flex-direction:column}
+.tab-dropdown-item{font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:400;color:var(--m);background:none;border:none;border-bottom:.5px solid var(--b);padding:11px 16px;cursor:pointer;transition:all .2s;text-align:left;width:100%}
+.tab-dropdown-item:last-child{border-bottom:none}
+.tab-dropdown-item:hover{background:var(--al);color:var(--a)}
+.tab-dropdown-item.active{background:var(--al);color:var(--m);font-weight:700}
+.tab-dropdown-submit{color:var(--m);font-weight:500}
 .form-header-title{font-family:'Noto Sans JP',sans-serif;font-size:19px;font-weight:500;color:var(--a);position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap}
 .hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .btn{font-family:'Noto Sans JP',sans-serif;font-size:10px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;border-radius:var(--r);padding:6px 14px;cursor:pointer;transition:all .2s;border:none}
@@ -40,7 +49,7 @@ html,body{font-family:'Noto Sans JP',sans-serif;font-weight:300;background:var(-
 .btn-accent{background:var(--a);color:var(--w)}
 .btn-accent:hover{opacity:.85}
 .autosave-badge{font-size:10px;color:var(--f);display:none}
-.tab-bar{background:var(--c);padding:.4rem 1rem;border-bottom:.5px solid var(--b)}
+.tab-bar{background:var(--c);padding:.4rem 1rem;border-bottom:.5px solid var(--b);position:relative}
 .tab-nav{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
 .tab-btn{
   font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:400;
@@ -80,6 +89,8 @@ html,body{font-family:'Noto Sans JP',sans-serif;font-weight:300;background:var(-
 .badge-req{font-size:9px;color:var(--er);background:var(--erl);border-radius:999px;padding:1px 7px;font-weight:400;flex-shrink:0}
 .badge-opt{font-size:9px;color:var(--f);background:#F3F0EB;border-radius:999px;padding:1px 7px;font-weight:400;flex-shrink:0}
 .field-hint{font-size:14px;color:var(--f);margin-bottom:5px;line-height:1.5}
+.char-count{font-size:11px;color:var(--f);text-align:right;margin-top:3px}
+.char-count.over{color:var(--er)}
 input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],input[type=url],select,textarea{width:100%;border:.5px solid var(--bs);border-radius:var(--r);padding:9px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:300;background:var(--w);color:var(--k);outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{border-color:var(--a)}
 textarea{resize:vertical;min-height:80px;line-height:1.6}
@@ -141,6 +152,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 #lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--r);cursor:default}
 #lightbox-close{position:fixed;top:1rem;right:1rem;width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2001;transition:background .2s}
 #lightbox-close:hover{background:rgba(255,255,255,.35)}
+@media(max-width:600px){
+  :root{font-size:15px}
+  .form-header{padding:.65rem 1rem}
+  .form-header-title{font-size:15px}
+  .tab-btn{width:4rem;height:4rem;font-size:.65rem}
+  .form-body{padding:1.5rem 1rem 5rem}
+  .confirm-body{padding:1.5rem 1rem 6rem}
+  .btn-submit-float{font-size:12px;padding:9px 18px}
+  .btn-nav{padding:7px 14px}
+  .crop-modal{max-width:100%}
+  .confirm-lbl{min-width:90px;font-size:12px}
+  .confirm-val{font-size:13px}
+}
 .crop-thumb:hover,.confirm-thumb:hover{opacity:.85;cursor:zoom-in;transition:opacity .2s}
 .confirm-header{background:var(--w);border-bottom:.5px solid var(--b);padding:.85rem 1.75rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .confirm-header-title{font-size:19px;font-weight:500;color:var(--a);position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}
@@ -215,9 +239,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
   <div class="tab-bar">
-  <div style="display:flex;align-items:center;justify-content:center;gap:1rem;padding:0 1rem">
-    <div class="tab-nav" id="tab-nav"></div>
-    <button class="tab-btn tab-btn-submit" id="tab-submit-btn" onclick="validateAndConfirm()" style="display:none;flex-shrink:0">確認画面</button>
+  <div style="display:flex;align-items:center;padding:.3rem 1rem;gap:1rem">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleTabMenu()">≡</button>
+
+  </div>
+  <div class="tab-dropdown" id="tab-dropdown">
+    <div class="tab-dropdown-list" id="tab-dropdown-list"></div>
   </div>
 </div>
   </div>
@@ -331,7 +358,7 @@ function loadFile(file) {
 function buildForm(rows, productName, adminPass) {
   const body = document.getElementById('form-body');
   const nav  = document.getElementById('tab-nav');
-  body.innerHTML = ''; nav.innerHTML = '';
+  body.innerHTML = ''; if(nav) nav.innerHTML = '';
   _secs = []; _curSec = 0; _blkCnt = 0;
   if (adminPass) _adminPass = adminPass;
   // フォームタイトルを設定（productNameがない場合は既存の内容を保持）
@@ -461,18 +488,36 @@ function buildForm(rows, productName, adminPass) {
   restoreSave();
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('form-screen').style.display = 'block';
-  const tabSubmit = document.getElementById('tab-submit-btn');
-  if (tabSubmit) tabSubmit.style.display = '';
+
 }
 
 // ---------- Tabs ----------
 function renderTabs() {
-  const nav = document.getElementById('tab-nav'); nav.innerHTML = '';
+  const list = document.getElementById('tab-dropdown-list');
+  const nav = document.getElementById('tab-nav');
+  if (nav) nav.innerHTML = '';
+  if (list) list.innerHTML = '';
   _secs.forEach((s, i) => {
-    const btn = document.createElement('button'); btn.className = 'tab-btn';
-    btn.textContent = s.label; btn.onclick = () => showSec(i);
-    nav.appendChild(btn);
+    const btn = document.createElement('button');
+    btn.className = 'tab-dropdown-item';
+    btn.textContent = s.label;
+    btn.onclick = () => { showSec(i); closeTabMenu(); };
+    if (list) list.appendChild(btn);
   });
+  // 確認画面ボタンを追加
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'tab-dropdown-item tab-dropdown-submit';
+  confirmBtn.textContent = '確認画面';
+  confirmBtn.onclick = () => { closeTabMenu(); validateAndConfirm(); };
+  if (list) list.appendChild(confirmBtn);
+}
+function toggleTabMenu() {
+  const dd = document.getElementById('tab-dropdown');
+  if (dd) dd.classList.toggle('open');
+}
+function closeTabMenu() {
+  const dd = document.getElementById('tab-dropdown');
+  if (dd) dd.classList.remove('open');
 }
 
 function showSec(i) {
@@ -480,6 +525,10 @@ function showSec(i) {
   document.querySelectorAll('.sec-block').forEach(el => el.classList.remove('active'));
   const el = document.getElementById(_secs[i].id); if (el) el.classList.add('active');
   document.querySelectorAll('.tab-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  document.querySelectorAll('.tab-dropdown-item').forEach((b, j) => b.classList.toggle('active', j === i));
+  // ハンバーガーボタンのテキストを現在のセクション名に更新
+  const hbtn = document.getElementById('hamburger-btn');
+  if (hbtn) hbtn.textContent = '≡ ' + (_secs[i] ? _secs[i].label : '');
   // footer
   const old = el && el.querySelector('.sec-footer,.submit-area'); if (old) old.remove();
   // 既存の管理者用ボタンも削除
@@ -535,7 +584,14 @@ function makeField(fr) {
     if (fr.hint) { const h = document.createElement('div'); h.className = 'field-hint'; h.textContent = fr.hint; wrap.appendChild(h); }
   }
   const input = buildInput(fr);
-  if (input) wrap.appendChild(input);
+  if (input) {
+    wrap.appendChild(input);
+    // 文字数カウンター
+    const el = input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' ? input : input.querySelector('input,textarea');
+    if (el && fr.maxLen && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      attachCharCounter(el, fr.maxLen, wrap);
+    }
+  }
   return wrap;
 }
 
@@ -547,7 +603,6 @@ function buildInput(fr) {
   if (type === 'textarea') {
     const el = document.createElement('textarea'); el.id = id;
     if (spec) el.placeholder = '例）' + spec;
-    if (fr.maxLen) el.maxLength = parseInt(fr.maxLen);
     return el;
   }
   if (type === 'select') {
@@ -589,8 +644,7 @@ function buildInput(fr) {
   el.type = ['email','tel','date','number','url'].includes(type) ? type : 'text';
   el.id = id;
   if (spec) el.placeholder = '例）' + spec;
-  if (fr.maxLen && ['text','email','tel','url'].includes(type)) el.maxLength = parseInt(fr.maxLen);
-  return el;
+    return el;
 }
 
 // ---------- File / Video / Image ----------
@@ -1004,6 +1058,21 @@ function validateAndConfirm(){
     const secEl = document.getElementById(sec.id);
     if (!secEl) return;
 
+    // 文字数超過チェック（全フィールド）
+    secEl.querySelectorAll('.char-count').forEach(counter => {
+      if (!counter.classList.contains('over')) return;
+      const fieldEl = counter.closest('.field');
+      if (!fieldEl) return;
+      fieldEl.classList.add('has-error');
+      if (!fieldEl.querySelector('.field-error-msg')) {
+        const msg = document.createElement('div'); msg.className = 'field-error-msg';
+        msg.textContent = '文字数が上限を超えています';
+        fieldEl.appendChild(msg);
+      }
+      const lbl = fieldEl.querySelector('.field-lbl');
+      errors.push({ secId: sec.id, secLabel: sec.label, label: (lbl ? lbl.textContent : '項目') + '（文字数超過）', fieldEl });
+    });
+
     // ブロック外の通常必須フィールドをチェック（block-item内は除外）
     secEl.querySelectorAll('.field').forEach(fieldEl => {
       if (fieldEl.closest('.block-item')) return; // ブロック内は別途チェック
@@ -1297,6 +1366,45 @@ function forceSubmit(){
   showConfirm();
 }
 
+function charCount(str) {
+  let count = 0;
+  for (const c of str) {
+    count += (c.charCodeAt(0) <= 0x7F || (c.charCodeAt(0) >= 0xFF61 && c.charCodeAt(0) <= 0xFF9F)) ? 0.5 : 1;
+  }
+  return Math.ceil(count * 10) / 10;
+}
+function attachCharCounter(el, maxLen, wrap) {
+  if (!maxLen) return;
+  const max = parseInt(maxLen);
+  const fieldEl = wrap.closest('.field') || wrap;
+  const counter = document.createElement('div');
+  counter.className = 'char-count';
+  counter.textContent = '0 / ' + max;
+  fieldEl.appendChild(counter);
+  el.addEventListener('input', () => {
+    const cnt = charCount(el.value);
+    counter.textContent = cnt + ' / ' + max;
+    counter.classList.toggle('over', cnt > max);
+    let msg = fieldEl.querySelector('.char-over-msg');
+    if (cnt > max) {
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.className = 'char-over-msg';
+        msg.style.cssText = 'font-size:12px;color:var(--er);margin-top:4px';
+        fieldEl.appendChild(msg);
+      }
+      msg.textContent = '文字数が上限を超えています（' + (cnt - max) + '文字超過）';
+      fieldEl.classList.add('has-error');
+      const lbl2 = fieldEl.querySelector('.field-lbl'); if(lbl2) lbl2.style.color='var(--er)';
+      if(el) { el.style.borderColor='var(--er)'; el.style.background='#fff8f7'; }
+    } else {
+      if (msg) msg.remove();
+      fieldEl.classList.remove('has-error');
+      const lbl2 = fieldEl.querySelector('.field-lbl'); if(lbl2) lbl2.style.color='';
+      if(el) { el.style.borderColor=''; el.style.background=''; }
+    }
+  });
+}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function openLightbox(src){
